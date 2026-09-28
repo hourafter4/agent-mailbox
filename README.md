@@ -48,7 +48,7 @@ Both agents must select the same workspace and mailbox. `--root /path/to/mailbox
 
 A registration identifies one exact conversation. Resuming it preserves the registration; switching conversations requires registering the replacement. Subagents must not register over their parent's binding. The monitor never picks another chat by recency or launches a replacement model session. `--agent codex unregister` or `--agent claude unregister` removes that recipient's binding.
 
-On macOS, `monitor-start` installs a per-mailbox LaunchAgent named `com.agent-mailbox.<hash>` under `~/Library/LaunchAgents/`. It starts at login and restarts after a crash. Runtime state and logs stay in the mailbox's `runtime/` directory. Only one monitor can own a mailbox.
+On macOS, `monitor-start` installs a per-mailbox LaunchAgent named `com.agent-mailbox.<hash>` under `~/Library/LaunchAgents/`. It starts at login and restarts after a crash. Runtime state and logs stay in the mailbox's `runtime/` directory. Only one monitor can own a mailbox. Its process lock uses a private socket under `/tmp/agent-mailbox-<uid>/`, so deeply nested workspace paths stay within Unix socket limits.
 
 ```bash
 agent-mailbox --workspace /path/to/project monitor-restart  # After updating this tool

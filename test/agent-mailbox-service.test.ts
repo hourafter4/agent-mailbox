@@ -89,6 +89,8 @@ describe("agent mailbox foreground service", () => {
   });
 
   it("places the default mailbox in the selected workspace", async () => {
+    workspace = join(workspace, "long-workspace-name-".repeat(8));
+    mkdirSync(workspace);
     const service = launch(null);
     const defaultRoot = join(workspace, ".agent-mailbox");
     await waitUntil(() => mailboxServiceStatus(defaultRoot).running);

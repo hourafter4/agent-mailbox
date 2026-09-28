@@ -95,7 +95,17 @@ async function lockMonitor(runtime: string): Promise<net.Server> {
 }
 
 async function lockMonitorSocket(runtime: string): Promise<net.Server> {
-  const socketPath = path.join(runtime, 'monitor.sock');
+  // Workspace paths routinely exceed macOS's 104-byte Unix-socket path limit.
+  const uid = process.getuid?.();
+  if (uid === undefined) throw new Error('Mailbox monitor sockets require a Unix host');
+  const socketDirectory = path.join('/tmp', `agent-mailbox-${uid}`);
+  fs.mkdirSync(socketDirectory, { recursive: true, mode: 0o700 });
+  const directory = fs.lstatSync(socketDirectory);
+  if (!directory.isDirectory() || directory.isSymbolicLink() || directory.uid !== uid || (directory.mode & 0o077)) {
+    throw new Error('Unsafe monitor socket directory');
+  }
+  const key = createHash('sha256').update(fs.realpathSync(runtime)).digest('hex').slice(0, 32);
+  const socketPath = path.join(socketDirectory, `${key}.sock`);
   if (fs.existsSync(socketPath)) {
     const original = fs.lstatSync(socketPath);
     if (!original.isSocket() || original.uid !== process.getuid?.()) throw new Error('Unsafe monitor lock path');
