@@ -11,6 +11,7 @@ import { afterEach, expect, it } from 'vitest';
 const exec = promisify(execFile);
 const script = fileURLToPath(new URL('../src/cli.ts', import.meta.url));
 const loader = fileURLToPath(new URL('../node_modules/tsx/dist/loader.mjs', import.meta.url));
+const binary = fileURLToPath(new URL('../bin/agent-mailbox.mjs', import.meta.url));
 const roots: string[] = [];
 const clients: Client[] = [];
 afterEach(async () => {
@@ -75,4 +76,18 @@ it('CLI file bodies preserve literal shell syntax and replies route to the origi
   await cli('claude', ['ack', '--id', sent.id]);
   expect(await cli('claude', ['wait', '--timeout', '0'])).toEqual([]);
   await expect(cli('claude', ['wait', '--timeout', '100'])).rejects.toThrow();
+});
+
+it('standalone binary isolates projects and honors workspace from an unrelated working directory', async () => {
+  const base = temp();
+  const first = path.join(base, 'project with spaces');
+  const second = path.join(base, 'second');
+  fs.mkdirSync(first); fs.mkdirSync(second);
+  const cli = async (cwd: string, args: string[]) => JSON.parse((await exec(process.execPath, [binary, ...args], { cwd })).stdout);
+  const sent = await cli(os.tmpdir(), ['--workspace', first, '--agent', 'codex', 'send', '--to', 'claude', '--subject', 'First workspace', '--body', 'Scoped message']);
+  expect(await cli(second, ['--agent', 'claude', 'inbox'])).toEqual([]);
+  expect((await cli(first, ['--agent', 'claude', 'inbox']))[0].id).toBe(sent.id);
+  const status = await cli(os.tmpdir(), ['--workspace', first, 'monitor-status']);
+  expect(status.workspace).toBe(fs.realpathSync(first));
+  expect(status.root).toBe(path.join(fs.realpathSync(first), '.agent-mailbox'));
 });
