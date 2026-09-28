@@ -1,0 +1,28 @@
+{
+  "name": "@local-tools/agent-mailbox",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Local durable messaging and idle wakeups between Codex and Claude Code sessions",
+  "engines": {
+    "node": ">=22"
+  },
+  "bin": {
+    "agent-mailbox": "bin/agent-mailbox.mjs"
+  },
+  "scripts": {
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit",
+    "mailbox": "node bin/agent-mailbox.mjs"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.30.0",
+    "zod": "^4.6.5",
+    "tsx": "^4"
+  },
+  "devDependencies": {
+    "@types/node": "^22",
+    "typescript": "^5",
+    "vitest": "^3"
+  }
+}
