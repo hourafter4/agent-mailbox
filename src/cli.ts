@@ -19,7 +19,7 @@ Commands:
   ack --id MESSAGE_ID                         Mark handled
   wait [--timeout 25]                         Wait up to 50 seconds
   serve                                      Start the stdio MCP server
-  register --session SESSION_ID              Bind this agent's existing chat
+  register [--session SESSION_ID]            Bind this agent's existing chat
   unregister                                Stop waking this agent's chat
   monitor-start                             Install/start the macOS background monitor
   monitor-restart                           Restart after updating the monitor code
@@ -72,7 +72,7 @@ async function main() {
   };
   switch (positionals[0]) {
     case 'register': {
-      const sessionId = values.session ?? (values.agent === 'codex' ? process.env.CODEX_THREAD_ID : process.env.CLAUDE_SESSION_ID);
+      const sessionId = values.session ?? (values.agent === 'codex' ? process.env.CODEX_THREAD_ID : process.env.CLAUDE_CODE_SESSION_ID ?? process.env.CLAUDE_SESSION_ID);
       if (!sessionId) throw new Error('--session is required when the client does not expose its session ID.');
       const monitor = createMailboxMonitor(root, workspace);
       monitor.configure(values.agent, { sessionId });

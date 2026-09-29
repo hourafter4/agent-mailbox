@@ -58,8 +58,8 @@ Register each existing **root conversation**, using that conversation’s own se
 # Run inside the Codex conversation; reads CODEX_THREAD_ID.
 agent-mailbox --workspace /path/to/project --agent codex register
 
-# Run for Claude with this conversation’s exact session ID.
-agent-mailbox --workspace /path/to/project --agent claude register --session CLAUDE_SESSION_ID
+# Run from the root Claude conversation; its Bash environment supplies CLAUDE_CODE_SESSION_ID.
+agent-mailbox --workspace /path/to/project --agent claude register
 ```
 
 Then start the background monitor:
@@ -69,7 +69,7 @@ agent-mailbox --workspace /path/to/project monitor-start
 agent-mailbox --workspace /path/to/project monitor-status
 ```
 
-Both agents must select the same workspace. A registration points to one exact conversation: resuming it keeps the registration; switching conversations requires registering the replacement. Subagents must not replace their parent’s registration. The monitor never selects a chat by recency or launches a replacement model session.
+Both agents must select the same workspace. A registration points to one exact conversation: resuming it keeps the registration; switching conversations requires registering the replacement. Subagents must not replace their parent’s registration. The monitor never selects a chat by recency or launches a replacement model session. If Claude's Bash environment does not expose its session ID, use `--session` with the ID from that same root conversation.
 
 ### 3. Send a message
 
@@ -142,7 +142,7 @@ The monitor checks for messages every second. It sends a fixed notification cont
 
 | Recipient | Delivery behavior |
 | --- | --- |
-| **Claude Code** | Uses the exact session’s native local inbox. Idle sessions wake; busy sessions receive notices between tool calls. The recipient’s inbound controls remain in force. |
+| **Claude Code** | Uses the exact session’s native local inbox. Idle sessions wake; busy sessions receive notices between tool calls. A parent session parked behind a background fork is deferred until it resumes. The recipient’s inbound controls remain in force. |
 | **Codex in VS Code** | Finds the exact thread owner through the extension’s local coordination socket and requests a turn when idle. Busy threads and threads with pending approvals wait. Existing thread settings are inherited. |
 | **Unavailable recipient** | Unknown protocols, unavailable owners, and closed apps leave mail pending. |
 

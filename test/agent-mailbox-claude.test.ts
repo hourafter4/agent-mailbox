@@ -105,6 +105,27 @@ describe("Claude mailbox wake adapter", () => {
     expect(JSON.parse(frames[0]).message.content).toBe("Mailbox notice");
   });
 
+  it("defers a parked recipient even when its registry says idle or busy", async () => {
+    for (const status of ["idle", "busy"]) {
+      await record({ status, parkedJobId: "background-fork" });
+      expect(await adapter.probe(binding)).toBe("offline");
+      await expect(adapter.wake(binding, "Mailbox notice")).rejects.toBeInstanceOf(WakeDeferredError);
+    }
+    expect(connections).toBe(0);
+    expect(frames).toEqual([]);
+  });
+
+  it("rechecks parking after probing, then offers when the parent resumes", async () => {
+    expect(await adapter.probe(binding)).toBe("idle");
+    await record({ parkedJobId: "background-fork" });
+    await expect(adapter.wake(binding, "Mailbox notice")).rejects.toBeInstanceOf(WakeDeferredError);
+    await record({ parkedJobId: null });
+    expect(await adapter.probe(binding)).toBe("idle");
+    await adapter.wake(binding, "Mailbox notice");
+    await expect.poll(() => frames.length).toBe(1);
+    expect(connections).toBe(1);
+  });
+
   it("defers without connecting when the recipient's status is unknown", async () => {
     await record({ status: undefined });
     await expect(adapter.wake(binding, "Mailbox notice")).rejects.toBeInstanceOf(WakeDeferredError);

@@ -12,6 +12,7 @@ interface ClaudeSession {
   cwd: string;
   messagingSocketPath: string;
   status?: string;
+  parked: boolean;
 }
 
 const owned = (info: { uid: number }) => typeof process.getuid !== "function" || info.uid === process.getuid();
@@ -57,7 +58,9 @@ export class ClaudeMailboxAdapter implements WakeAdapter {
           const socket = await lstat(socketPath);
           if (!socket.isSocket() || socket.isSymbolicLink() || !owned(socket) || (socket.mode & 0o077)) continue;
           process.kill(pid, 0);
-          return { pid, sessionId: record.sessionId, cwd, messagingSocketPath: socketPath, status: record.status };
+          // A parent can report idle while parked behind a background fork; its socket does not wake that fork.
+          return { pid, sessionId: record.sessionId, cwd, messagingSocketPath: socketPath, status: record.status,
+            parked: record.parkedJobId != null && record.parkedJobId !== "" };
         } catch {
           // Stale, unreadable, or malformed registry records are not recipients.
         } finally {
@@ -72,7 +75,7 @@ export class ClaudeMailboxAdapter implements WakeAdapter {
 
   async probe(binding: Binding): Promise<"idle" | "busy" | "offline"> {
     const session = await this.resolve(binding);
-    return session === null ? "offline" : session.status === "idle" ? "idle" : "busy";
+    return session === null || session.parked ? "offline" : session.status === "idle" ? "idle" : "busy";
   }
 
   /** Resolution means the notice was offered, not processed or acknowledged by Claude. */
@@ -80,6 +83,7 @@ export class ClaudeMailboxAdapter implements WakeAdapter {
     if (!notice.trim() || Buffer.byteLength(notice) > 16_000) throw new Error("Invalid mailbox wake notice");
     const session = await this.resolve(binding);
     if (!session) throw new WakeDeferredError("Claude mailbox recipient is unavailable");
+    if (session.parked) throw new WakeDeferredError("Claude mailbox recipient is parked behind another job");
     if (session.status !== "idle" && session.status !== "busy") {
       throw new WakeDeferredError("Claude mailbox recipient status is unknown");
     }
