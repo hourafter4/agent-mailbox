@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024" role="img" aria-labelledby="title">
+  <title id="title">Agent Mailbox app icon</title>
+  <defs>
+    <radialGradient id="surface" cx=".28" cy=".16" r="1.1">
+      <stop stop-color="#FFFFFF"/>
+      <stop offset="1" stop-color="#EEEBF8"/>
+    </radialGradient>
+    <linearGradient id="body" x1="0" y1="0" x2=".7" y2="1">
+      <stop stop-color="#8458F0"/>
+      <stop offset="1" stop-color="#5D3BC8"/>
+    </linearGradient>
+    <linearGradient id="flap" x1="0" y1="0" x2=".6" y2="1">
+      <stop stop-color="#C3ADFF"/>
+      <stop offset="1" stop-color="#9A7CF5"/>
+    </linearGradient>
+    <filter id="depth" x="-40%" y="-40%" width="180%" height="180%" color-interpolation-filters="sRGB">
+      <feDropShadow dx="0" dy="18" stdDeviation="22" flood-color="#3B2A7A" flood-opacity=".18"/>
+    </filter>
+  </defs>
+  <rect width="1024" height="1024" rx="224" fill="url(#surface)"/>
+  <rect x="120" y="120" width="784" height="784" rx="176" fill="none" stroke="#A997E8" stroke-opacity=".55" stroke-width="15"/>
+  <g id="mark" filter="url(#depth)">
+    <rect x="292" y="352" width="440" height="320" rx="48" fill="url(#body)"/>
+    <path fill="url(#flap)" d="M292 400Q292 352 340 352H684Q732 352 732 400L540 548Q512 568 484 548Z"/>
+  </g>
+</svg>
